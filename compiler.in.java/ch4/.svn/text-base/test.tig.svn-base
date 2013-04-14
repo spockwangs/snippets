@@ -1,9 +1,0 @@
-let
-  var a := 5
-  type c = int
-  type d = c
-  function f() : int = g(a)
-  function g(i: int) = f()
-in
-  f()
-end
