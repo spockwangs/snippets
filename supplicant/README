@@ -1,0 +1,2 @@
+The codes in this directory implements an aunthentication prototocol IEEE
+802.1X-2004.  To compile it you need libpcap 0.8 and libnet 1.0.2.

@@ -1,0 +1,14 @@
+/*sdflkdf*/
+/*ldf
+ *lsdkf
+ */
+int main()
+{
+        int a /* a comment */ = 3;
+        printf("/* a comment\n"); /*comment*/
+        a = 1/*p; /* */;
+        a = 1/*/*/;
+        "lsslf\"lsdf";
+        '/' '*'
+        '\034'
+}

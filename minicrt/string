@@ -1,0 +1,78 @@
+#ifndef __STRING
+#define __STRING
+
+#include "minicrt.h"
+#include "iostream"
+
+namespace std {
+
+    class string {
+    public:
+        string(const char *s)
+            : my_len(0), my_str(0) {
+            my_len = strlen(s);
+            my_str = new char[my_len+1];
+            strcpy(my_str, s);
+        }
+            
+        string(const string& rhs)
+            : my_len(0), my_str(0) {
+            my_len = rhs.my_len;
+            my_str = new char[my_len+1];
+            strcpy(my_str, rhs.my_str);
+        }
+            
+        ~string() {
+            delete[] my_str;
+            my_str = 0;
+            my_len = 0;
+        }
+
+        string& operator=(const string& rhs) {
+            if (this != &rhs) {
+                if (my_str != 0)
+                    delete[] my_str;
+                if (rhs.my_len != 0) {
+                    my_str = new char[rhs.my_len+1];
+                    strcpy(my_str, rhs.my_str);
+                    my_len = rhs.my_len;
+                } else {
+                    my_len = 0;
+                    my_str = 0;
+                }
+                return *this;
+            }
+        }
+
+        const char& operator[](unsigned idx) const {
+            return my_str[idx];
+        }
+
+        char& operator[](unsigned idx) {
+            return my_str[idx];
+        }
+
+        const char *c_str() const {
+            return my_str;
+        }
+
+        unsigned length() const {
+            return my_len;
+        }
+        
+        unsigned size() const {
+            return my_len;
+        }
+        
+    private:
+        unsigned my_len;
+        char *my_str;
+    };
+
+    ofstream& operator<<(ofstream& oo, const string& s)
+    {
+        return oo << s.c_str();
+    }
+}
+
+#endif

@@ -1,0 +1,4 @@
+# Test cases for suffix tree matching statistics.
+
+mississippi ssi 3 2 1
+

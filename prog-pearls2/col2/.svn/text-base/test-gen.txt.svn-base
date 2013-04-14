@@ -1,0 +1,9 @@
+S -> NP VP
+NP -> AL N | N
+N -> John | Mary
+AL -> A | A AL
+A -> Big | Littel | Tiny
+VP -> V AvL
+V -> runs | walks
+AvL -> Av | AvL Av
+Av -> quickly | slowly

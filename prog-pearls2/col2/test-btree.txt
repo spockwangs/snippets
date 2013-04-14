@@ -1,0 +1,6 @@
+A B C
+B D E
+C E F
+E G H
+F I J
+root A

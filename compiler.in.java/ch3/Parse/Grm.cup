@@ -1,0 +1,152 @@
+package Parse;
+
+/* Terminals */
+terminal String ID, STRING;
+terminal Integer INT;
+terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, 
+	LBRACK, RBRACK, LBRACE, RBRACE, DOT, PLUS, MINUS, 
+	TIMES, DIVIDE, EQ, NEQ, LT, LE, GT, GE, AND, OR, 
+	ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO, DO, 
+	LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS;
+
+/* Non_terminals */
+non terminal Integer lvalue, binary_exp, unary_exp;
+
+non terminal program, exp, decs, dec, tydec, vardec, fundec, ty, tyfields,
+             tyfieldlist, block_exp, funcall, record_creation,
+             array_creation, selection_exp, assignment_exp, iteration_exp, jump_exp,
+             let_exp, expseq, argument_list, record_list, X;
+
+/* Precedences */
+precedence left OR;
+precedence left AND;
+precedence nonassoc EQ, NEQ, GT, GE, LT, LE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence right UMINUS;
+precedence left DOT;
+
+/* Grammar */
+
+start with program;
+
+/* This is a skeleton grammar file, meant to illustrate what kind of
+ * declarations are necessary before the grammar productions.  Students are 
+ * expected to replace the dummy production below with an actual grammar. 
+ */
+
+program ::= exp
+         ;
+
+/* Declarations */
+decs ::=
+     | dec decs
+     ;
+
+dec ::= tydec
+    | vardec
+    | fundec
+    ;
+
+tydec ::= TYPE ID EQ ty ;
+
+ty ::= ID
+   | LBRACE tyfields RBRACE
+   | ARRAY OF ID
+   ;
+
+tyfields ::=
+         | tyfieldlist
+         ;
+
+tyfieldlist ::= ID COLON ID
+            | ID COLON ID COMMA tyfieldlist
+            ;
+
+vardec ::= VAR ID ASSIGN exp
+       | VAR ID COLON ID ASSIGN exp
+       ;
+
+fundec ::= FUNCTION ID LPAREN tyfields RPAREN EQ exp
+       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp
+       ;
+
+/* Expressions */
+lvalue ::= ID
+       | lvalue DOT ID 
+       | X
+       | lvalue LBRACK exp RBRACK
+       ;
+
+X ::= ID LBRACK exp RBRACK ;
+
+exp ::=
+    | lvalue
+    | NIL
+    | block_exp
+    | INT
+    | STRING
+    | funcall
+    | unary_exp
+    | binary_exp
+    | record_creation
+    | array_creation
+    | assignment_exp
+    | selection_exp
+    | iteration_exp
+    | jump_exp
+    | let_exp
+    ;
+
+block_exp ::= LPAREN expseq RPAREN ;
+
+expseq ::= exp
+       | exp SEMICOLON expseq
+       ;
+
+funcall ::= ID LPAREN argument_list RPAREN ;
+
+argument_list ::= exp
+              | exp COLON argument_list
+              ;
+
+unary_exp ::= MINUS exp %prec UMINUS ;
+
+binary_exp ::= exp PLUS exp
+           | exp MINUS exp
+           | exp TIMES exp
+           | exp DIVIDE exp
+           | exp EQ exp
+           | exp NEQ exp
+           | exp GT exp
+           | exp LT exp
+           | exp GE exp
+           | exp LE exp
+           | exp AND exp
+           | exp OR exp
+           ;
+
+record_creation ::= ID LBRACE RBRACE
+                | ID LBRACE record_list RBRACE
+                ;
+
+record_list ::= ID EQ exp
+            | ID EQ exp COLON record_list
+            ;
+
+array_creation ::= X OF exp ;
+
+assignment_exp ::= lvalue ASSIGN exp ;
+
+/* use shift to resovle the shift/reduce conflict */
+selection_exp ::= IF exp THEN exp 
+              | IF exp THEN exp ELSE exp
+              ;
+
+iteration_exp ::= WHILE exp DO exp
+              | FOR ID ASSIGN exp TO exp DO exp
+              ;
+
+jump_exp ::= BREAK ;
+
+let_exp ::= LET decs IN expseq END ;

@@ -1,0 +1,63 @@
+#! /usr/bin/perl
+#
+# http_proxy.pl -- A simple HTTP proxy
+#
+# It can be used to snoop the contents of HTTP requests and responses.
+# Also it can be used to do testing.
+
+use warnings;
+use strict;
+use IO::Socket::INET;
+
+my $origin_host = "google.com:80";
+
+my $sock = new IO::Socket::INET(
+    LocalHost => "0.0.0.0",
+    LocalPort => 8080,
+    Reuse => 1,
+    Listen => 10) or die "$!";
+
+for (;;) {
+    my $client = accept($sock);
+    my $r = fork();
+    if ($r < 0) {
+        die $!;
+    } else if ($r == 0) {
+        my $server = new IO::Socket::INET(
+            PeerAddr => $server_host,
+            Proto => "tcp",
+            Blocking => 0) or die "$!";
+            
+        my ($rset, $wset) = ('', '');
+        vec($rset, fileno($client), 1) = 1;
+        vec($rset, fileno($server), 1) = 1;
+        vec($wset, fileno($client), 1) = 1;
+        vec($wset, fileno($server), 1) = 1;
+        my ($upbuffer, $downbuffer) = ('', '');
+        for (;;) {
+            my $nfds = select($rout=$rset, $wout=$wset, undef, 0.3);
+            if (nfds < 0) {
+                die $!;
+            }
+            if (vec($rset, fileno($client), 1) == 1) {
+                my $buf;
+                $client->recv($buf, 8096, 0) or die $!;
+                $upbuffer .= $buf;
+                if (length($buf) == 0) {
+                    # Client has closed the connecton.
+                    vec($rset, fileno($client), 1) = 0;
+                }
+            }
+            if (vec($rset
+            if (vec($wset, fileno($server), 1) == 1) {
+                my $nsent = $server->send($buf, 0);
+                if ($nsent == undef) {
+                    die $!;
+                }
+                $buffer = substr($buffer, $nsent);
+            }
+        }
+    }
+    
+    
+

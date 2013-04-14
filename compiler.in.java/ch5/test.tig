@@ -1,0 +1,22 @@
+let
+  var a := 5
+  type a = a
+  type a = b
+  type b = c
+  type d = a
+  type e = d
+  var b: a := 0
+  type intarray = array of int
+  type list = { first: int, rest: node }
+  type node = { first: int, rest: list }
+  var l: list := list { first = 0, res = nil }
+  var x: b := nil
+  function f() : int = 
+    (let
+       type a = int
+       function f() = ()
+     in () end)
+  function f(i: int) = f()
+in
+  g()
+end

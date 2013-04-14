@@ -1,0 +1,238 @@
+package Parse;
+
+action code {: 
+       static Symbol.Symbol sym(String s) {
+	         return Symbol.Symbol.symbol(s);
+	   }
+       
+       class X {
+             int pos;
+             Symbol.Symbol id;
+             Absyn.Exp e;
+             X(int _pos, Symbol.Symbol _id, Absyn.Exp _e) {
+                   pos = _pos;
+                   e = _e;
+                   id = _id;
+             }
+       }
+:};
+
+terminal String ID, STRING;
+terminal Integer INT;
+terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, 
+	LBRACE, RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, 
+	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
+	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE, UMINUS;
+
+non terminal Absyn.Var lvalue;
+non terminal Absyn.Exp program, exp, iteration_exp, binary_exp;
+non terminal Absyn.SeqExp expseq, block_exp;
+non terminal Absyn.CallExp funcall;
+non terminal Absyn.OpExp unary_exp;
+non terminal Absyn.RecordExp record_creation;
+non terminal Absyn.ArrayExp array_creation;
+non terminal Absyn.IfExp selection_exp;
+non terminal Absyn.AssignExp assignment_exp;
+non terminal Absyn.BreakExp jump_exp;
+non terminal Absyn.LetExp let_exp;
+non terminal Absyn.Dec dec;
+non terminal Absyn.DecList decs;
+non terminal Absyn.VarDec vardec;
+non terminal Absyn.TypeDec tydec, tydecs;
+non terminal Absyn.FunctionDec fundec, fundecs;
+non terminal Absyn.Ty ty;
+non terminal Absyn.ExpList argument_list;
+non terminal Absyn.FieldExpList record_list;
+non terminal Absyn.FieldList tyfieldlist, tyfields;
+non terminal X X;
+
+/* Precedences */
+precedence left OR;
+precedence left AND;
+precedence nonassoc EQ, NEQ, GT, GE, LT, LE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence right UMINUS;
+precedence left DOT;
+
+/* Grammar */
+start with program;
+
+program ::= exp:e {: RESULT = e; :}
+        ;
+
+/* Declarations */
+decs ::=        {: RESULT = null; :}
+     | dec:d decs:ds         {: RESULT = new Absyn.DecList(d, ds); :}
+     ;
+
+dec ::= tydecs:d {: RESULT = d; :} 
+    | vardec:d  {: RESULT = d; :}
+    | fundecs:d  {: RESULT = d; :}
+    ;
+
+tydecs ::= tydec:ty        {: RESULT = ty; :}
+       | tydec:t tydecs:ts {: RESULT = new Absyn.TypeDec(t.pos, t.name, t.ty, ts); :}
+       ;
+
+tydec ::= TYPE ID:id EQ ty:ty
+      {: RESULT = new Absyn.TypeDec(idleft, sym(id), ty, null); :}
+      ;
+
+ty ::= ID:id       {: RESULT = new Absyn.NameTy(idleft, sym(id)); :}
+   | LBRACE:lbrace tyfields:f RBRACE {: RESULT = new Absyn.RecordTy(lbraceleft, f); :}
+   | ARRAY OF ID:id       {: RESULT = new Absyn.ArrayTy(idleft, sym(id)); :}
+   ;
+
+tyfields ::=    {: RESULT = null; :}
+         | tyfieldlist:f  {: RESULT = f; :}
+         ;
+
+tyfieldlist ::= ID:id1 COLON ID:id2     
+            {: RESULT = new Absyn.FieldList(id1left, sym(id1), sym(id2), null); :}
+            | ID:id1 COLON ID:id2 COMMA tyfieldlist:fds
+            {: RESULT = new Absyn.FieldList(id1left, sym(id1), sym(id2), fds); :}
+            ;
+
+vardec ::= VAR ID:id ASSIGN exp:e
+       {: RESULT = new Absyn.VarDec(idleft, sym(id), null, e); :}
+       | VAR ID:id COLON ID:tyid ASSIGN exp:e
+       {: RESULT = new Absyn.VarDec(idleft, sym(id), new Absyn.NameTy(tyidleft, sym(tyid)), e); :}
+       ;
+
+fundecs ::= fundec:f {: RESULT = f; :}
+        | fundec:f fundecs:fs
+        {: RESULT = new Absyn.FunctionDec(f.pos, f.name, f.params, f.result, f.body, fs); :}
+        ;
+
+fundec ::= FUNCTION ID:id LPAREN tyfields:fds RPAREN EQ exp:e
+       {: RESULT = new Absyn.FunctionDec(idleft, sym(id), fds, null, e, null); :}
+       | FUNCTION ID:id LPAREN tyfields:fds RPAREN COLON ID:tyid EQ exp:e
+       {: RESULT = new Absyn.FunctionDec(idleft, sym(id), fds, 
+                       new Absyn.NameTy(tyidleft, sym(tyid)), e, null); :}
+       ;
+
+/* Expressions */
+lvalue ::= ID:id  {: RESULT = new Absyn.SimpleVar(idleft, sym(id)); :}
+       | lvalue:l DOT ID:id
+       {: RESULT = new Absyn.FieldVar(lleft, l, sym(id)); :}
+       | X:x {: RESULT = new Absyn.SubscriptVar(xleft, new Absyn.SimpleVar(x.pos, x.id), x.e); :}
+       | lvalue:l LBRACK exp:e RBRACK
+       {: RESULT = new Absyn.SubscriptVar(lleft, l, e); :}
+       ;
+
+X ::= ID:id LBRACK exp:e RBRACK
+  {: RESULT = new X(idleft, sym(id), e); :} ;
+
+exp ::= lvalue:l {: RESULT = new Absyn.VarExp(l.pos, l); :}
+    | NIL:nil {: RESULT = new Absyn.NilExp(nilleft); :}
+    | block_exp:e       {: RESULT = e; :}
+    | INT:n {: RESULT = new Absyn.IntExp(nleft, n); :}
+    | STRING:s {: RESULT = new Absyn.StringExp(sleft, s); :} 
+    | funcall:f   {: RESULT = f; :}
+    | unary_exp:u {: RESULT = u; :}
+    | binary_exp:b   {: RESULT = b; :}
+    | record_creation:r {: RESULT = r; :}
+    | array_creation:a  {: RESULT = a; :}
+    | assignment_exp:a  {: RESULT = a; :}
+    | selection_exp:s   {: RESULT = s; :}
+    | iteration_exp:i   {: RESULT = i; :}
+    | jump_exp:j        {: RESULT = j; :}
+    | let_exp:l         {: RESULT = l; :}
+    ;
+
+block_exp ::= LPAREN expseq:es RPAREN
+          {: RESULT = es; :}
+          ;
+
+expseq ::=      {: RESULT = null; :}
+       | exp:e
+       {: RESULT = new Absyn.SeqExp(eleft, new Absyn.ExpList(e, null)); :}
+       | exp:e SEMICOLON expseq:es
+       {: RESULT = new Absyn.SeqExp(eleft, new Absyn.ExpList(e, es.list)); :}
+       ;
+
+funcall ::= ID:id LPAREN argument_list:args RPAREN
+        {: RESULT = new Absyn.CallExp(idleft, sym(id), args); :}
+        ;
+
+argument_list ::=       {: RESULT = null; :}
+              | exp:e
+              {: RESULT = new Absyn.ExpList(e, null); :}
+              | exp:e COLON argument_list:args
+              {: RESULT = new Absyn.ExpList(e, args); :}
+              ;
+
+unary_exp ::= MINUS exp:e 
+          {: RESULT = new Absyn.OpExp(eleft,
+                          new Absyn.IntExp(eleft, 0),
+                          Absyn.OpExp.MINUS, e); :} 
+          %prec UMINUS 
+          ;
+
+binary_exp ::= exp:e1 PLUS:plus exp:e2 
+           {: RESULT = new Absyn.OpExp(plusleft, e1, Absyn.OpExp.PLUS, e2); :}
+           | exp:e1 MINUS:minus exp:e2
+           {: RESULT = new Absyn.OpExp(minusleft, e1, Absyn.OpExp.MINUS, e2); :}
+           | exp:e1 TIMES:times exp:e2
+           {: RESULT = new Absyn.OpExp(timesleft, e1, Absyn.OpExp.MUL, e2); :}
+           | exp:e1 DIVIDE:div exp:e2
+           {: RESULT = new Absyn.OpExp(divleft, e1, Absyn.OpExp.DIV, e2); :}
+           | exp:e1 EQ:eq exp:e2
+           {: RESULT = new Absyn.OpExp(eqleft, e1, Absyn.OpExp.EQ, e2); :}
+           | exp:e1 NEQ:neq exp:e2
+           {: RESULT = new Absyn.OpExp(neqleft, e1, Absyn.OpExp.NE, e2); :}
+           | exp:e1 GT:gt exp:e2
+           {: RESULT = new Absyn.OpExp(gtleft, e1, Absyn.OpExp.GT, e2); :}
+           | exp:e1 LT:lt exp:e2
+           {: RESULT = new Absyn.OpExp(ltleft, e1, Absyn.OpExp.LT, e2); :}
+           | exp:e1 GE:ge exp:e2
+           {: RESULT = new Absyn.OpExp(geleft, e1, Absyn.OpExp.GE, e2); :}
+           | exp:e1 LE:le exp:e2
+           {: RESULT = new Absyn.OpExp(leleft, e1, Absyn.OpExp.LE, e2); :}
+           | exp:e1 AND exp:e2
+           {: RESULT = new Absyn.IfExp(e1left, e1, e2, new Absyn.IntExp(-1, 0)); :}
+           | exp:e1 OR exp:e2
+           {: RESULT = new Absyn.IfExp(e1left, e1, new Absyn.IntExp(-1, 1), e2); :}
+           ;
+
+record_creation ::= ID:id LBRACE RBRACE 
+                {: RESULT = new Absyn.RecordExp(idleft, sym(id), null); :}
+                | ID:id LBRACE record_list:fds RBRACE
+                {: RESULT = new Absyn.RecordExp(idleft, sym(id), fds); :}
+                ;
+
+record_list ::= ID:id EQ exp:e
+            {: RESULT = new Absyn.FieldExpList(idleft, sym(id), e, null); :}
+            | ID:id EQ exp:e COLON record_list:list
+            {: RESULT = new Absyn.FieldExpList(idleft, sym(id), e, list); :}
+            ;
+
+array_creation ::= X:x OF exp:e
+               {: RESULT = new Absyn.ArrayExp(x.pos, x.id, x.e, e); :}
+               ;
+
+assignment_exp ::= lvalue:l ASSIGN exp:e
+               {: RESULT = new Absyn.AssignExp(lleft, l, e); :}
+               ;
+
+/* use shift to resovle the shift/reduce conflict */
+selection_exp ::= IF:if_ exp:e1 THEN exp:e2
+              {: RESULT = new Absyn.IfExp(if_left, e1, e2); :}
+              | IF:if_ exp:e1 THEN exp:e2 ELSE exp:e3
+              {: RESULT = new Absyn.IfExp(if_left, e1, e2, e3); :}
+              ;
+
+iteration_exp ::= WHILE:while_ exp:e1 DO exp:e2
+              {: RESULT = new Absyn.WhileExp(while_left, e1, e2); :}
+              | FOR:for_ ID:id ASSIGN exp:e1 TO exp:e2 DO exp:e3
+              {: RESULT = new Absyn.ForExp(for_left, new Absyn.VarDec(idleft, sym(id), null, e1),  e2, e3); :}
+              ;
+
+jump_exp ::= BREAK:b {: RESULT = new Absyn.BreakExp(bleft); :}
+         ;
+
+let_exp ::= LET:l decs:ds IN expseq:es END
+        {: RESULT = new Absyn.LetExp(lleft, ds, es); :}
+        ;
+

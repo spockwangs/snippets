@@ -1,0 +1,91 @@
+# FSM for C lexer.
+# 
+# format: state input next output [ behavior ]
+#
+# As input 'o' represents any character not matched, 'd' means digits and
+# 'a' means letters, and others means themselves.  As output '.' means
+# collect it to a variable, 'p' means print the collected string, 'a' means
+# print the collected string followed by the input, and '0' means doing
+# nothing.  The behavior field is optional; it means ungetting the input.
+# It is used because sometimes we have to look ahead for a character.
+
+start NORMAL
+NORMAL ' SINGLE .
+NORMAL " DOUBLE .
+NORMAL ( NORMAL p
+NORMAL ) NORMAL p
+NORMAL [ NORMAL p
+NORMAL ] NORMAL p
+NORMAL { NORMAL p
+NORMAL } NORMAL p
+NORMAL : NORMAL p
+NORMAL ? NORMAL p
+NORMAL , NORMAL p
+NORMAL ; NORMAL p
+NORMAL . NORMAL p
+NORMAL - - 0   
+NORMAL + + 0   
+NORMAL > > 0   
+NORMAL < < 0   
+NORMAL = = 0   
+NORMAL ! ! 0   
+NORMAL | | 0   
+NORMAL * * 0   
+NORMAL / / 0   
+NORMAL % % 0   
+NORMAL & & 0   
+NORMAL ^ ^ 0   
+NORMAL d d .   
+NORMAL a a .   
+NORMAL o NORMAL 0
+- > NORMAL ->  
+- = NORMAL -=  
+- - NORMAL --  
+- o NORMAL - u 
++ + NORMAL ++  
++ = NORMAL +=  
++ o NORMAL + u 
+> = NORMAL >=  
+> > >> 0       
+> o NORMAL > u 
+>> = NORMAL >>=
+>> o NORMAL >> 
+< = NORMAL <=  
+< < << 0       
+< o NORMAL < u 
+<< = NORMAL <<=
+<< o NORMAL << 
+= = NORMAL ==  
+= o NORMAL = u 
+! = NORMAL !=  
+! o NORMAL ! u 
+| = NORMAL |=  
+| | NORMAL ||  
+| o NORMAL | u 
+* = NORMAL *=  
+* o NORMAL * u 
+/ = NORMAL /=  
+/ * COMMENT 0  
+/ o NORMAL / u 
+% = NORMAL %=  
+% o NORMAL % u 
+& = NORMAL &=  
+& o NORMAL & u 
+^ = NORMAL ^=  
+^ o NORMAL ^ u 
+SINGLE ' NORMAL a
+SIGNLE \ ESCAPE1 .
+SINGLE o SINGLE .
+DOUBLE " NORMAL a
+DOUBLE \ ESCAPE2 .
+DOUBLE o DOUBLE .
+ESCAPE1 o SINGLE .
+ESCAPE2 o DOUBLE .
+COMMENT * END 0
+COMMENT o COMMENT 0
+END / NORMAL SPACE
+END o COMMENT 0
+a a a .
+a o NORMAL p u
+d d d .
+d o NORMAL p u

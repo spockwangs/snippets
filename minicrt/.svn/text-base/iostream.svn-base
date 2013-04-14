@@ -1,0 +1,98 @@
+#ifndef __IOSTREAM
+#define __IOSTREAM
+
+#include "minicrt.h"
+
+namespace std {
+
+    class ofstream {
+    public:
+        enum Openmode {
+            IN = 1, OUT, BIN, TRUNC
+        };
+        
+        ofstream() : my_fp(0) { }
+            
+        explicit ofstream(const char *path, Openmode mode = OUT)
+            : my_fp(0) {
+            open(path, mode);
+        }
+        
+        ~ofstream() {
+            close();
+        }
+
+        ofstream& operator<<(char c) {
+            fputc(c, my_fp);
+            return *this;
+        }
+        
+        ofstream& operator<<(int n) {
+            fprintf(my_fp, "%d", n);
+            return *this;
+        }
+        
+        ofstream& operator<<(const char *s) {
+            fprintf(my_fp, "%s", s);
+            return *this;
+        }
+        
+        ofstream& operator<<(ofstream& (*manip)(ofstream&)) {
+            return manip(*this);
+        }
+
+        void open(const char *path, Openmode mode = OUT) {
+            char ms[4];
+
+            if (my_fp)
+                close();
+
+            switch (mode) {
+            case OUT | TRUNC:
+                strcpy(ms, "w+");
+                break;
+            case OUT | IN | BIN:
+                strcpy(ms, "wb");
+                break;
+            case OUT | IN | BIN | TRUNC:
+                strcpy(ms, "wb+");
+                break;
+            default:
+                strcpy(ms, "r");
+                break;
+            }
+            my_fp = fopen(path, ms);
+        }
+
+        void close() {
+            if (my_fp) {
+                fclose(my_fp);
+                my_fp = 0;
+            }
+        }
+
+        ofstream& write(const char *buf, unsigned size) {
+            fwrite(buf, 1, size, my_fp);
+            return *this;
+        }
+        
+    protected:
+        FILE *my_fp;
+    };
+
+    inline ofstream& endl(ofstream& o)
+    {
+        return o << '\n';
+    }
+
+    class stdout_stream : public ofstream {
+    public:
+        stdout_stream() {
+            my_fp = stdout;
+        }
+    };
+
+    extern stdout_stream cout;
+}
+
+#endif

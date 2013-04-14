@@ -1,0 +1,10 @@
+Exception: STATUS_ACCESS_VIOLATION at eip=004010D2
+eax=61541020 ebx=00000000 ecx=00000000 edx=00403066 esi=610FF1A0 edi=00401460
+ebp=0022CCE8 esp=0022CCB0 program=e:\C.answers\ch1\Ex22\a.exe, pid 4024, thread main
+cs=001B ds=0023 es=0023 fs=003B gs=0000 ss=0023
+Stack trace:
+Frame     Function  Args
+0022CCE8  004010D2  (00000001, 611676AC, 006B0090, 0022CC70)
+0022CD98  61006168  (00000000, 0022CDD0, 610054E0, 0022CDD0)
+610054E0  61004416  (0000009C, A02404C7, E8610FF1, FFFFFF48)
+     13 [main] a 4024 _cygtls::handle_exceptions: Error while dumping state (probably corrupted stack)

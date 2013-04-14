@@ -1,0 +1,7 @@
+This directory contains source code of projects described in the book
+"Modern Compiler Implementation in Java" by Andrew Appel, 1997.  It
+implements a simple compiler for the language "Tiger" described in that
+book. (The directory 'ch10' contains the complete code.) It has some bugs
+but I'm not sure where it is.  I think it is in the code generator.
+Although I do not implement the compiler correctly I get a great taste of
+what a compiler does and how it does that.
